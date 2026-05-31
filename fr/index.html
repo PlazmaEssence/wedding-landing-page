@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Passport animation</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #2a3320;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 16px 24px;
+  min-height: 100vh;
+  font-family: sans-serif;
+}
+
+#stage {
+  perspective: 1400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+#viewer {
+  position: relative;
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center center;
+}
+
+#viewer.open-layout #passport-wrap {
+  position: absolute;
+  top: 0;
+  left: var(--page-w);
+}
+
+#passport-wrap {
+  position: relative;
+  transform-style: preserve-3d;
+}
+
+.page {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 5px 12px 12px 5px;
+  overflow: hidden;
+  box-shadow: 6px 6px 24px rgba(0, 0, 0, 0.65);
+}
+
+#cover-back,
+#right-page {
+  border-radius: 12px;
+}
+
+.page img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+#right-page {
+  z-index: 1;
+}
+
+#cover-back {
+  transform: rotateY(180deg);
+}
+
+#book {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transform-origin: left center;
+  transition: transform 1.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2;
+}
+
+button {
+  margin-top: 20px;
+  padding: 8px 28px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <div id="viewer">
+    <div id="passport-wrap">
+      <div id="right-page" class="page">
+        <img src="images/debug_bottom_fr.jpg" alt="Inside right page">
+      </div>
+      <div id="book">
+        <div class="page" id="cover-front">
+          <img src="images/debug_cover_fr.jpg" alt="Passport cover">
+        </div>
+        <div class="page" id="cover-back">
+          <img src="images/debug_top_fr.jpg" alt="Inside left page">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<button id="btn" type="button">Open passport</button>
+
+<script>
+var IMG_W = 1000;
+var IMG_H = 1429;
+
+var FLIP_MS = 1300;
+var ROTATE_MS = 800;
+
+var stage = document.getElementById('stage');
+var viewer = document.getElementById('viewer');
+var passWrap = document.getElementById('passport-wrap');
+var book = document.getElementById('book');
+var btn = document.getElementById('btn');
+var state = 'closed';
+var isRotated = false;
+
+function getMaxBounds() {
+  return {
+    w: window.innerWidth - 32,
+    h: window.innerHeight - 120
+  };
+}
+
+function computePageWidth(isOpenLayout) {
+  var bounds = getMaxBounds();
+
+  if (isOpenLayout && isRotated) {
+    var fromHeight = Math.floor(bounds.h / 2 * IMG_W / IMG_H);
+    var fromWidth = Math.floor(bounds.w * IMG_W / IMG_H);
+    return Math.round(Math.min(fromHeight, fromWidth, 280));
+  }
+
+  return Math.round(Math.min(bounds.w * 0.45, 280));
+}
+
+function updateLayout() {
+  var isOpenLayout = viewer.classList.contains('open-layout');
+  var cw = computePageWidth(isOpenLayout);
+  var ch = Math.round(cw * IMG_H / IMG_W);
+  var bounds = getMaxBounds();
+
+  passWrap.style.setProperty('--page-w', cw + 'px');
+  passWrap.style.width = cw + 'px';
+  passWrap.style.height = ch + 'px';
+
+  if (isOpenLayout) {
+    var spreadW = cw * 2;
+    var spreadH = ch;
+    viewer.style.width = spreadW + 'px';
+    viewer.style.height = spreadH + 'px';
+
+    if (isRotated) {
+      var footW = ch;
+      var footH = spreadW;
+      var scale = Math.min(1, bounds.w / footW, bounds.h / footH);
+      stage.style.width = Math.ceil(footW * scale) + 'px';
+      stage.style.height = Math.ceil(footH * scale) + 'px';
+      viewer.style.transform = 'rotate(90deg) scale(' + scale + ')';
+    } else {
+      stage.style.width = spreadW + 'px';
+      stage.style.height = spreadH + 'px';
+      viewer.style.transform = '';
+    }
+  } else {
+    viewer.style.width = cw + 'px';
+    viewer.style.height = ch + 'px';
+    stage.style.width = cw + 'px';
+    stage.style.height = ch + 'px';
+    viewer.style.transform = '';
+  }
+}
+
+btn.addEventListener('click', function() {
+  if (state === 'closed') {
+    state = 'opening';
+    btn.disabled = true;
+    viewer.classList.add('open-layout');
+    updateLayout();
+    book.style.transform = 'rotateY(-160deg)';
+    btn.textContent = 'Close passport';
+    setTimeout(function() {
+      isRotated = true;
+      updateLayout();
+      setTimeout(function() {
+        state = 'open';
+        btn.disabled = false;
+      }, ROTATE_MS);
+    }, FLIP_MS);
+  } else if (state === 'open') {
+    state = 'closing';
+    btn.disabled = true;
+    isRotated = false;
+    updateLayout();
+    setTimeout(function() {
+      book.style.transform = '';
+      setTimeout(function() {
+        viewer.classList.remove('open-layout');
+        state = 'closed';
+        updateLayout();
+        btn.disabled = false;
+        btn.textContent = 'Open passport';
+      }, FLIP_MS);
+    }, ROTATE_MS);
+  }
+});
+
+window.addEventListener('resize', updateLayout);
+updateLayout();
+</script>
+</body>
+</html>
