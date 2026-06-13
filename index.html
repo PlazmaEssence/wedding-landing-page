@@ -32,6 +32,12 @@ body {
   align-items: center;
   justify-content: center;
   overflow: visible;
+  padding-bottom: 0;
+  transition: padding-bottom 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#stage.is-open {
+  padding-bottom: 200px;
 }
 
 #viewer {
@@ -134,6 +140,7 @@ button:hover {
 </div>
 
 <button id="btn" type="button">Open passport</button>
+<a id="wedding-link" href="https://www.theknot.com/us/justin-ferland-and-melodie-lavoie-2027-11-10" target="_blank" rel="noopener" style="display:none; margin-top: 32px; color: rgba(255,255,255,0.85); font-size: 13px; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.4); padding-bottom: 2px;">Link to Wedding Website</a>
 
 <script>
 var IMG_W = 1000;
@@ -147,6 +154,7 @@ var viewer = document.getElementById('viewer');
 var passWrap = document.getElementById('passport-wrap');
 var book = document.getElementById('book');
 var btn = document.getElementById('btn');
+var weddingLink = document.getElementById('wedding-link');
 var state = 'closed';
 var isRotated = false;
 
@@ -220,11 +228,15 @@ btn.addEventListener('click', function() {
       setTimeout(function() {
         state = 'open';
         btn.disabled = false;
+        weddingLink.style.display = 'inline';
+        stage.classList.add('is-open');
       }, ROTATE_MS);
     }, FLIP_MS);
   } else if (state === 'open') {
     state = 'closing';
     btn.disabled = true;
+    weddingLink.style.display = 'none';
+    stage.classList.remove('is-open');
     isRotated = false;
     updateLayout();
     setTimeout(function() {
