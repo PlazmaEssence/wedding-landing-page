@@ -3,7 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Passport animation</title>
+<title>You're Invited!</title>
+
+<meta property="og:title" content="You're invited! 💌" />
+<meta property="og:image" content="https://www.justinlovesmelodie.protolab.cc/preview.jpg" />
+<meta property="og:url" content="https://www.justinlovesmelodie.protolab.cc" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://www.justinlovesmelodie.protolab.cc/preview.jpg" />
+
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -23,6 +31,12 @@ body {
   align-items: center;
   justify-content: center;
   overflow: visible;
+  padding-bottom: 0;
+  transition: padding-bottom 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#stage.is-open {
+  padding-bottom: 200px;
 }
 
 #viewer {
@@ -124,7 +138,8 @@ button:hover {
   </div>
 </div>
 
-<button id="btn" type="button">Open passport</button>
+<button id="btn" type="button">Ouvrir le passport</button>
+<a id="wedding-link" href="https://www.theknot.com/us/justin-ferland-and-melodie-lavoie-2027-11-10" target="_blank" rel="noopener" style="display:none; margin-top: 32px; color: rgba(255,255,255,0.85); font-size: 13px; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.4); padding-bottom: 2px;">Lien au site web</a>
 
 <script>
 var IMG_W = 1000;
@@ -138,6 +153,7 @@ var viewer = document.getElementById('viewer');
 var passWrap = document.getElementById('passport-wrap');
 var book = document.getElementById('book');
 var btn = document.getElementById('btn');
+var weddingLink = document.getElementById('wedding-link');
 var state = 'closed';
 var isRotated = false;
 
@@ -204,18 +220,22 @@ btn.addEventListener('click', function() {
     viewer.classList.add('open-layout');
     updateLayout();
     book.style.transform = 'rotateY(-160deg)';
-    btn.textContent = 'Close passport';
+    btn.textContent = 'Fermer le passport';
     setTimeout(function() {
       isRotated = true;
       updateLayout();
       setTimeout(function() {
         state = 'open';
         btn.disabled = false;
+        weddingLink.style.display = 'inline';
+        stage.classList.add('is-open');
       }, ROTATE_MS);
     }, FLIP_MS);
   } else if (state === 'open') {
     state = 'closing';
     btn.disabled = true;
+    weddingLink.style.display = 'none';
+    stage.classList.remove('is-open');
     isRotated = false;
     updateLayout();
     setTimeout(function() {
